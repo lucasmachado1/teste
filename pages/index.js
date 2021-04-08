@@ -1,5 +1,5 @@
 function Home() {                          
-    return <div> Éssa é a melhor aplicação que já vi em toda minha vida</div>
+    return <div> Vou construir aqui o melhor site quejá fiz!</div>
 }
 
 export default Home
