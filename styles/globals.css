@@ -13,7 +13,7 @@ h2 { margin-bottom: 8px; letter-spacing: -.04em; }
 .hero p { max-width: 760px; color: #aab7d4; font-size: 1.08rem; line-height: 1.6; }
 .heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 24px; color: #aab7d4; }
 .primaryButton { min-height: 52px; border-radius: 18px; padding: 0 22px; color: #03100b; background: linear-gradient(135deg, #00f5a0, #58a6ff); font-weight: 950; box-shadow: 0 16px 32px rgba(0,245,160,.18); }
-.notice, .warningCard, .disclaimer, .loadingCard, .configCard, .assetCard, .metric { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07); backdrop-filter: blur(18px); box-shadow: 0 16px 60px rgba(0,0,0,.22); }
+.notice, .warningCard, .disclaimer, .loadingCard, .configCard, .assetCard, .metric, .riskPlan { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07); backdrop-filter: blur(18px); box-shadow: 0 16px 60px rgba(0,0,0,.22); }
 .notice { max-width: 1160px; margin: 0 auto 18px; padding: 16px; border-radius: 18px; color: #00f5a0; }
 .warningCard { max-width: 1160px; margin: 0 auto 18px; padding: 16px; border-radius: 18px; color: #ffd166; }
 .warningCard p { margin: 8px 0 0; color: #c5d0e6; }
@@ -44,6 +44,20 @@ h2 { margin-bottom: 8px; letter-spacing: -.04em; }
 .forecastBox span, .forecastBox small, .forecastBox em { display: block; color: #aab7d4; }
 .forecastBox em { margin-top: 8px; font-size: .8rem; font-style: normal; line-height: 1.4; }
 .forecastBox strong { display: block; margin: 6px 0; font-size: 1.7rem; letter-spacing: -.04em; }
+.riskPlan { margin-top: 14px; padding: 16px; border-radius: 24px; background: linear-gradient(135deg, rgba(255, 209, 102, .15), rgba(255, 71, 120, .08)); box-shadow: none; }
+.riskPlan span { display: block; color: #ffd166; font-size: .78rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.riskPlan strong { display: block; margin-top: 4px; font-size: 1.22rem; }
+.riskPlan p, .riskPlan em { display: block; margin: 12px 0 0; color: #c5d0e6; font-size: .86rem; line-height: 1.45; }
+.riskPlan em { color: #8f9fbd; font-style: normal; }
+.riskHeader { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.riskHeader small { color: #aab7d4; white-space: nowrap; }
+.tradeGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.tradeGrid .metric { min-height: 70px; padding: 10px; background: rgba(0,0,0,.18); box-shadow: none; }
+.targetsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.target { padding: 12px; border-radius: 16px; background: rgba(0, 245, 160, .1); border: 1px solid rgba(0, 245, 160, .16); }
+.target span { color: #00f5a0; }
+.target small { display: block; color: #aab7d4; margin-top: 4px; }
+.neutralPlan { background: rgba(255, 209, 102, .1); }
 .sourceLine { margin: 14px 0 0; color: #8f9fbd; font-size: .86rem; }
 .metricsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
 .metricsGrid .metric { min-height: 78px; padding: 12px; background: rgba(0,0,0,.16); box-shadow: none; }
@@ -51,4 +65,4 @@ h2 { margin-bottom: 8px; letter-spacing: -.04em; }
 .reasonList { color: #c5d0e6; line-height: 1.5; }
 .reasonList p { margin-bottom: 8px; }
 .disclaimer { max-width: 1160px; margin: 18px auto 0; border-radius: 22px; padding: 16px; color: #aab7d4; }
-@media (max-width: 860px) { .appShell { padding: 14px 12px 30px; } .hero, .configCard, .assetCard, .loadingCard, .metric { border-radius: 24px; } .heroContent { border-radius: 23px; padding: 28px 20px; } .summaryGrid, .assetGrid, .configCard { grid-template-columns: 1fr; } .metricsGrid { grid-template-columns: repeat(2, 1fr); } .configCard .primaryButton { width: 100%; } }
+@media (max-width: 860px) { .appShell { padding: 14px 12px 30px; } .hero, .configCard, .assetCard, .loadingCard, .metric { border-radius: 24px; } .heroContent { border-radius: 23px; padding: 28px 20px; } .summaryGrid, .assetGrid, .configCard { grid-template-columns: 1fr; } .metricsGrid, .tradeGrid { grid-template-columns: repeat(2, 1fr); } .targetsGrid { grid-template-columns: 1fr; } .configCard .primaryButton { width: 100%; } }

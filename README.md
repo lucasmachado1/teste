@@ -1,17 +1,18 @@
 # Fiscal Crypto Pro
 
-Bot profissional para fiscalizar **BTC, ETH, XRP e ADA** com preços reais, análise técnica e envio de relatórios para o Telegram.
+Bot profissional para fiscalizar **BTC, ETH, XRP e ADA** com preços reais, análise técnica, take profit, stop loss e envio de relatórios para o Telegram.
 
 ## O que o projeto faz
 
 - Consulta candles reais de 15 minutos e ticker 24h usando Binance Spot API com fallback real na Coinbase Exchange API.
-- Calcula SMA20, SMA50, EMA12, EMA26, RSI14 e volatilidade dos últimos candles.
+- Calcula SMA20, SMA50, EMA12, EMA26, RSI14, ATR14 e volatilidade dos últimos candles.
+- Gera take profits, stop loss, risco percentual e relação risco/retorno para cada setup direcional.
 - Gera um sinal técnico (`compra forte`, `compra moderada`, `neutro`, `venda moderada`, `venda forte`).
 - Cria uma previsão estatística baseada em médias móveis, momentum e preços anteriores.
-- Envia relatórios para o Telegram via bot.
+- Envia relatórios para o Telegram via bot com direção LONG/SHORT, entrada, TP1/TP2/TP3 e stop loss quando houver sinal direcional.
 - Exibe um dashboard web profissional para acompanhar o mercado manualmente.
 
-> A previsão é estatística e não representa recomendação financeira.
+> A previsão, take profit e stop loss são estatísticos e não representam recomendação financeira.
 
 ## Configuração do Telegram
 
@@ -47,7 +48,7 @@ npm run bot
 ## Endpoints
 
 - `GET /api/market`: retorna análise em tempo real para BTC, ETH, XRP e ADA. Se um provedor externo falhar, retorna dados parciais reais e uma lista `warnings`, evitando erro 502 por falha isolada de exchange.
-- `POST /api/telegram`: gera uma nova análise e envia o relatório ao Telegram configurado.
+- `POST /api/telegram`: gera uma nova análise e envia o relatório ao Telegram configurado, incluindo take profits e stop loss dos setups ativos.
 
 ## Observações técnicas
 

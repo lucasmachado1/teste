@@ -22,6 +22,54 @@ function Metric({ label, value }) {
   );
 }
 
+
+function RiskPlan({ plan }) {
+  if (!plan) return null;
+
+  if (plan.direction === 'NEUTRO') {
+    return (
+      <div className="riskPlan neutralPlan">
+        <div>
+          <span>Plano operacional</span>
+          <strong>Aguardar confirmação</strong>
+        </div>
+        <p>{plan.invalidation}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="riskPlan">
+      <div className="riskHeader">
+        <div>
+          <span>Plano operacional</span>
+          <strong>{plan.direction}</strong>
+        </div>
+        <small>Risco {plan.riskPercent}% · {plan.timeFrame}</small>
+      </div>
+
+      <div className="tradeGrid">
+        <Metric label="Entrada" value={formatMoney(plan.entry)} />
+        <Metric label="Stop loss" value={formatMoney(plan.stopLoss)} />
+        <Metric label="R:R" value={plan.rewardToRisk} />
+      </div>
+
+      <div className="targetsGrid">
+        {plan.takeProfits.map((target) => (
+          <div className="target" key={target.label}>
+            <span>{target.label}</span>
+            <strong>{formatMoney(target.price)}</strong>
+            <small>+{target.gainPercent}%</small>
+          </div>
+        ))}
+      </div>
+
+      <p>{plan.invalidation}</p>
+      <em>{plan.notes}</em>
+    </div>
+  );
+}
+
 function AssetCard({ asset }) {
   const changeClass = asset.change24h >= 0 ? 'positive' : 'negative';
 
@@ -47,6 +95,8 @@ function AssetCard({ asset }) {
         <em>{asset.forecast.model}</em>
       </div>
 
+      <RiskPlan plan={asset.riskPlan} />
+
       <div className="sourceLine">Fonte real: {asset.source}</div>
 
       <div className="metricsGrid">
@@ -55,6 +105,7 @@ function AssetCard({ asset }) {
         <Metric label="EMA12" value={formatMoney(asset.indicators.ema12)} />
         <Metric label="EMA26" value={formatMoney(asset.indicators.ema26)} />
         <Metric label="RSI14" value={asset.indicators.rsi14} />
+        <Metric label="ATR14" value={formatMoney(asset.indicators.atr14)} />
         <Metric label="Volatilidade" value={`${asset.indicators.volatility20}%`} />
       </div>
 
@@ -140,7 +191,7 @@ export default function Home() {
         <div className="heroContent">
           <span className="eyebrow">Fiscal Crypto Pro</span>
           <h1>Bot profissional para fiscalizar BTC, ETH, XRP e ADA em tempo real.</h1>
-          <p>Coleta preços reais em múltiplos provedores, calcula médias móveis, RSI, volatilidade e cria uma previsão objetiva baseada nos preços anteriores.</p>
+          <p>Coleta preços reais em múltiplos provedores, calcula médias móveis, RSI, volatilidade, take profit, stop loss e cria uma previsão objetiva baseada nos preços anteriores.</p>
           <div className="heroActions">
             <button className="primaryButton" onClick={loadMarket} disabled={loading} type="button">{loading ? 'Atualizando...' : 'Atualizar agora'}</button>
             {report && <span>Última leitura: {new Date(report.updatedAt).toLocaleTimeString('pt-BR')}</span>}
@@ -177,7 +228,7 @@ export default function Home() {
       </section>
 
       <section className="disclaimer">
-        <strong>Aviso:</strong> a previsão é estatística e não representa recomendação financeira. Use gerenciamento de risco.
+        <strong>Aviso:</strong> take profit, stop loss e previsão são estatísticos e não representam recomendação financeira. Use gerenciamento de risco.
       </section>
     </main>
   );
