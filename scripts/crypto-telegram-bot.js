@@ -1,32 +1,45 @@
 const { analyzeMarket, formatTelegramMessage } = require('../lib/marketAnalysis');
 const { sendTelegramMessage } = require('../lib/telegram');
+const {
+  evaluateReport,
+  formatMonitorMessage,
+  getBankrollBrl,
+  getCheckIntervalMs
+} = require('../lib/tradingMonitor');
 
-const intervalMs = Number(process.env.ALERT_INTERVAL_MS || 300000);
-const minScoreDelta = Number(process.env.ALERT_MIN_SCORE_DELTA || 2);
-let lastScores = new Map();
+const intervalMs = getCheckIntervalMs();
+const bankrollBrl = getBankrollBrl();
+const sendFullReportEveryCycles = Number(process.env.FULL_REPORT_EVERY_CYCLES || 12);
+const positions = new Map();
+let cycle = 0;
 
-function shouldAlert(asset) {
-  const previousScore = lastScores.get(asset.ticker);
-  lastScores.set(asset.ticker, asset.signal.score);
-
-  if (previousScore === undefined) return true;
-  return Math.abs(asset.signal.score - previousScore) >= minScoreDelta;
+function shouldSendFullReport() {
+  return cycle === 1 || (sendFullReportEveryCycles > 0 && cycle % sendFullReportEveryCycles === 0);
 }
 
 async function runCycle() {
+  cycle += 1;
   const report = await analyzeMarket();
-  const importantAssets = report.assets.filter(shouldAlert);
-  const message = importantAssets.length
-    ? formatTelegramMessage({ ...report, assets: importantAssets })
-    : formatTelegramMessage(report);
+  const events = evaluateReport(report, positions, bankrollBrl);
+  const monitorMessage = formatMonitorMessage(report, events, { bankrollBrl, checkIntervalMs: intervalMs });
 
-  await sendTelegramMessage(message);
-  console.log(`[${new Date().toISOString()}] Alerta enviado para ${importantAssets.length || report.assets.length} ativos.`);
+  await sendTelegramMessage(monitorMessage);
+
+  if (shouldSendFullReport()) {
+    await sendTelegramMessage(formatTelegramMessage(report));
+  }
+
+  console.log([
+    `[${new Date().toISOString()}] Check 5m enviado.`,
+    `Ativos analisados: ${report.assets.length}.`,
+    `Posições abertas: ${positions.size}.`,
+    `Eventos: ${events.length}.`
+  ].join(' '));
 }
 
 async function start() {
   console.log('Fiscal Crypto Pro iniciado. Pressione Ctrl+C para encerrar.');
-  console.log(`Intervalo: ${intervalMs}ms | Delta mínimo de score: ${minScoreDelta}`);
+  console.log(`Check/previsão: ${intervalMs}ms | Banca virtual por ativo: R$ ${bankrollBrl.toFixed(2)}`);
 
   await runCycle();
   setInterval(() => {

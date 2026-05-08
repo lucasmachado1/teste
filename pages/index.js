@@ -122,13 +122,14 @@ function ConfigCard({ telegramConfigured, onSend, sending }) {
       <div>
         <span className="eyebrow">Telegram</span>
         <h2>Alertas automáticos</h2>
-        <p>Configure as variáveis de ambiente com o token do bot e o chat onde os relatórios devem chegar.</p>
+        <p>Configure o Telegram para receber previsão a cada 5 minutos, checks automáticos de take profit/stop loss e acompanhamento da banca virtual de R$ 100 por ativo.</p>
       </div>
 
       <div className="envGrid">
         <code>TELEGRAM_BOT_TOKEN</code>
         <code>TELEGRAM_CHAT_ID</code>
-        <code>ALERT_INTERVAL_MS=300000</code>
+        <code>CHECK_INTERVAL_MS=300000</code>
+        <code>BANKROLL_PER_ASSET_BRL=100</code>
       </div>
 
       <div className="telegramStatus">
@@ -167,7 +168,7 @@ export default function Home() {
 
   useEffect(() => {
     loadMarket();
-    const timer = setInterval(loadMarket, 60000);
+    const timer = setInterval(loadMarket, 300000);
     return () => clearInterval(timer);
   }, []);
 
@@ -191,7 +192,7 @@ export default function Home() {
         <div className="heroContent">
           <span className="eyebrow">Fiscal Crypto Pro</span>
           <h1>Bot profissional para fiscalizar BTC, ETH, XRP e ADA em tempo real.</h1>
-          <p>Coleta preços reais em múltiplos provedores, calcula médias móveis, RSI, volatilidade, take profit, stop loss e cria uma previsão objetiva baseada nos preços anteriores.</p>
+          <p>Coleta preços reais em múltiplos provedores, calcula médias móveis, RSI, volatilidade, take profit, stop loss e cria uma previsão de 5 minutos baseada nos preços anteriores.</p>
           <div className="heroActions">
             <button className="primaryButton" onClick={loadMarket} disabled={loading} type="button">{loading ? 'Atualizando...' : 'Atualizar agora'}</button>
             {report && <span>Última leitura: {new Date(report.updatedAt).toLocaleTimeString('pt-BR')}</span>}
@@ -228,7 +229,7 @@ export default function Home() {
       </section>
 
       <section className="disclaimer">
-        <strong>Aviso:</strong> take profit, stop loss e previsão são estatísticos e não representam recomendação financeira. Use gerenciamento de risco.
+        <strong>Aviso:</strong> take profit, stop loss, banca virtual de R$ 100 por ativo e previsão de 5 minutos são estatísticos e não representam recomendação financeira. Use gerenciamento de risco.
       </section>
     </main>
   );
