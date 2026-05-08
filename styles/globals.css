@@ -1,0 +1,50 @@
+* { box-sizing: border-box; }
+html, body, #__next { min-height: 100%; margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #050816; color: #f8fbff; }
+button { border: 0; font: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+code { font-family: "SFMono-Regular", Consolas, monospace; }
+.appShell { min-height: 100vh; padding: 28px min(5vw, 48px) 48px; background: radial-gradient(circle at top left, rgba(41, 98, 255, .4), transparent 34%), radial-gradient(circle at top right, rgba(0, 245, 160, .22), transparent 28%), #050816; }
+.hero { max-width: 1160px; margin: 0 auto 22px; padding: 1px; border-radius: 36px; background: linear-gradient(135deg, rgba(33, 150, 243, .65), rgba(0, 245, 160, .45), rgba(255,255,255,.08)); box-shadow: 0 28px 100px rgba(0,0,0,.38); }
+.heroContent { padding: clamp(28px, 7vw, 72px); border-radius: 35px; background: linear-gradient(135deg, rgba(11, 18, 38, .94), rgba(11, 18, 38, .74)); backdrop-filter: blur(20px); }
+.eyebrow { display: inline-flex; color: #00f5a0; font-weight: 900; text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; }
+h1, h2, p { margin-top: 0; }
+h1 { max-width: 900px; margin: 14px 0 16px; font-size: clamp(2.25rem, 8vw, 5.5rem); line-height: .94; letter-spacing: -.08em; }
+h2 { margin-bottom: 8px; letter-spacing: -.04em; }
+.hero p { max-width: 760px; color: #aab7d4; font-size: 1.08rem; line-height: 1.6; }
+.heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 24px; color: #aab7d4; }
+.primaryButton { min-height: 52px; border-radius: 18px; padding: 0 22px; color: #03100b; background: linear-gradient(135deg, #00f5a0, #58a6ff); font-weight: 950; box-shadow: 0 16px 32px rgba(0,245,160,.18); }
+.notice, .disclaimer, .loadingCard, .configCard, .assetCard, .metric { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07); backdrop-filter: blur(18px); box-shadow: 0 16px 60px rgba(0,0,0,.22); }
+.notice { max-width: 1160px; margin: 0 auto 18px; padding: 16px; border-radius: 18px; color: #00f5a0; }
+.summaryGrid { max-width: 1160px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.metric { padding: 16px; border-radius: 22px; min-height: 92px; }
+.metric span { display: block; color: #8f9fbd; font-size: .82rem; margin-bottom: 10px; }
+.metric strong { display: block; font-size: 1.08rem; line-height: 1.25; }
+.configCard { max-width: 1160px; margin: 0 auto 18px; border-radius: 28px; padding: 22px; display: grid; grid-template-columns: 1.4fr 1fr auto; align-items: center; gap: 18px; }
+.configCard p { color: #aab7d4; margin-bottom: 0; }
+.envGrid { display: grid; gap: 8px; }
+.envGrid code { display: block; padding: 10px 12px; border-radius: 14px; color: #cfe4ff; background: rgba(0,0,0,.22); border: 1px solid rgba(255,255,255,.08); }
+.telegramStatus { display: flex; align-items: center; gap: 8px; color: #aab7d4; font-size: .92rem; }
+.dot { width: 10px; height: 10px; border-radius: 999px; background: #ff5a7a; box-shadow: 0 0 22px rgba(255,90,122,.6); }
+.dot.ok { background: #00f5a0; box-shadow: 0 0 22px rgba(0,245,160,.6); }
+.assetGrid { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.assetCard, .loadingCard { border-radius: 30px; padding: 22px; }
+.assetHeader, .priceRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ticker { color: #58a6ff; font-weight: 950; letter-spacing: .16em; }
+.pill { display: inline-flex; white-space: nowrap; border-radius: 999px; padding: 8px 12px; font-size: .78rem; font-weight: 900; text-transform: uppercase; }
+.pill.buy { color: #04150f; background: #00f5a0; }
+.pill.sell { color: #fff; background: #ff4778; }
+.pill.neutral { color: #06101f; background: #ffd166; }
+.priceRow { margin: 18px 0; align-items: baseline; }
+.priceRow strong { font-size: clamp(1.75rem, 5vw, 3rem); letter-spacing: -.06em; }
+.positive { color: #00f5a0; }
+.negative { color: #ff6b8a; }
+.forecastBox { padding: 16px; border-radius: 22px; background: linear-gradient(135deg, rgba(88,166,255,.18), rgba(0,245,160,.12)); border: 1px solid rgba(255,255,255,.09); }
+.forecastBox span, .forecastBox small { display: block; color: #aab7d4; }
+.forecastBox strong { display: block; margin: 6px 0; font-size: 1.7rem; letter-spacing: -.04em; }
+.metricsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+.metricsGrid .metric { min-height: 78px; padding: 12px; background: rgba(0,0,0,.16); box-shadow: none; }
+.metricsGrid .metric strong { font-size: .96rem; }
+.reasonList { color: #c5d0e6; line-height: 1.5; }
+.reasonList p { margin-bottom: 8px; }
+.disclaimer { max-width: 1160px; margin: 18px auto 0; border-radius: 22px; padding: 16px; color: #aab7d4; }
+@media (max-width: 860px) { .appShell { padding: 14px 12px 30px; } .hero, .configCard, .assetCard, .loadingCard, .metric { border-radius: 24px; } .heroContent { border-radius: 23px; padding: 28px 20px; } .summaryGrid, .assetGrid, .configCard { grid-template-columns: 1fr; } .metricsGrid { grid-template-columns: repeat(2, 1fr); } .configCard .primaryButton { width: 100%; } }
