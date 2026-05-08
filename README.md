@@ -4,7 +4,7 @@ Bot profissional para fiscalizar **BTC, ETH, XRP e ADA** com preços reais, aná
 
 ## O que o projeto faz
 
-- Consulta candles reais de 15 minutos e ticker 24h na Binance Spot API.
+- Consulta candles reais de 15 minutos e ticker 24h usando Binance Spot API com fallback real na Coinbase Exchange API.
 - Calcula SMA20, SMA50, EMA12, EMA26, RSI14 e volatilidade dos últimos candles.
 - Gera um sinal técnico (`compra forte`, `compra moderada`, `neutro`, `venda moderada`, `venda forte`).
 - Cria uma previsão estatística baseada em médias móveis, momentum e preços anteriores.
@@ -46,7 +46,7 @@ npm run bot
 
 ## Endpoints
 
-- `GET /api/market`: retorna análise completa em tempo real para BTC, ETH, XRP e ADA.
+- `GET /api/market`: retorna análise em tempo real para BTC, ETH, XRP e ADA. Se um provedor externo falhar, retorna dados parciais reais e uma lista `warnings`, evitando erro 502 por falha isolada de exchange.
 - `POST /api/telegram`: gera uma nova análise e envia o relatório ao Telegram configurado.
 
 ## Observações técnicas

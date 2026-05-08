@@ -11,6 +11,13 @@ export default async function handler(req, res) {
     const report = await analyzeMarket();
     return res.status(200).json({ ...report, telegramConfigured: hasTelegramConfig() });
   } catch (error) {
-    return res.status(502).json({ message: 'Não foi possível consultar o mercado em tempo real.', detail: error.message });
+    return res.status(500).json({
+      message: 'Falha inesperada ao montar a análise de mercado.',
+      detail: error.message,
+      telegramConfigured: hasTelegramConfig(),
+      assets: [],
+      warnings: [error.message],
+      status: 'unavailable'
+    });
   }
 }

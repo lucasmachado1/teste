@@ -4,6 +4,7 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 
 function formatMoney(value) {
   if (value === null || value === undefined) return '--';
+  if (typeof value !== 'number' || Number.isNaN(value)) return '--';
   return currency.format(value);
 }
 
@@ -43,7 +44,10 @@ function AssetCard({ asset }) {
         <span>Previsão estatística</span>
         <strong>{formatMoney(asset.forecast.projectedPrice)}</strong>
         <small>{asset.forecast.projectedChange}% · {asset.forecast.horizon}</small>
+        <em>{asset.forecast.model}</em>
       </div>
+
+      <div className="sourceLine">Fonte real: {asset.source}</div>
 
       <div className="metricsGrid">
         <Metric label="SMA20" value={formatMoney(asset.indicators.sma20)} />
@@ -136,7 +140,7 @@ export default function Home() {
         <div className="heroContent">
           <span className="eyebrow">Fiscal Crypto Pro</span>
           <h1>Bot profissional para fiscalizar BTC, ETH, XRP e ADA em tempo real.</h1>
-          <p>Coleta preços reais da Binance, calcula médias móveis, RSI, volatilidade e cria uma previsão objetiva baseada nos preços anteriores.</p>
+          <p>Coleta preços reais em múltiplos provedores, calcula médias móveis, RSI, volatilidade e cria uma previsão objetiva baseada nos preços anteriores.</p>
           <div className="heroActions">
             <button className="primaryButton" onClick={loadMarket} disabled={loading} type="button">{loading ? 'Atualizando...' : 'Atualizar agora'}</button>
             {report && <span>Última leitura: {new Date(report.updatedAt).toLocaleTimeString('pt-BR')}</span>}
@@ -146,8 +150,17 @@ export default function Home() {
 
       {message && <div className="notice">{message}</div>}
 
+      {report && report.warnings && report.warnings.length > 0 && (
+        <section className="warningCard">
+          <strong>Status parcial dos provedores</strong>
+          {report.warnings.map((warning) => <p key={warning}>{warning}</p>)}
+        </section>
+      )}
+
       {report && (
         <section className="summaryGrid">
+          <Metric label="Status" value={report.status} />
+          <Metric label="Fonte" value={report.source} />
           <Metric label="Viés do mercado" value={report.summary.bias} />
           <Metric label="Score médio" value={report.summary.averageScore} />
           <Metric label="Mais forte" value={report.summary.strongest} />
@@ -159,6 +172,7 @@ export default function Home() {
 
       <section className="assetGrid">
         {loading && !report && <div className="loadingCard">Consultando mercado real...</div>}
+        {!loading && report && sortedAssets.length === 0 && <div className="loadingCard">Nenhum provedor retornou dados reais agora. Tente novamente em instantes ou verifique a conectividade do servidor.</div>}
         {sortedAssets.map((asset) => <AssetCard asset={asset} key={asset.symbol} />)}
       </section>
 

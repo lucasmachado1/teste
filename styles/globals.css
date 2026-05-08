@@ -13,9 +13,11 @@ h2 { margin-bottom: 8px; letter-spacing: -.04em; }
 .hero p { max-width: 760px; color: #aab7d4; font-size: 1.08rem; line-height: 1.6; }
 .heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 24px; color: #aab7d4; }
 .primaryButton { min-height: 52px; border-radius: 18px; padding: 0 22px; color: #03100b; background: linear-gradient(135deg, #00f5a0, #58a6ff); font-weight: 950; box-shadow: 0 16px 32px rgba(0,245,160,.18); }
-.notice, .disclaimer, .loadingCard, .configCard, .assetCard, .metric { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07); backdrop-filter: blur(18px); box-shadow: 0 16px 60px rgba(0,0,0,.22); }
+.notice, .warningCard, .disclaimer, .loadingCard, .configCard, .assetCard, .metric { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.07); backdrop-filter: blur(18px); box-shadow: 0 16px 60px rgba(0,0,0,.22); }
 .notice { max-width: 1160px; margin: 0 auto 18px; padding: 16px; border-radius: 18px; color: #00f5a0; }
-.summaryGrid { max-width: 1160px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.warningCard { max-width: 1160px; margin: 0 auto 18px; padding: 16px; border-radius: 18px; color: #ffd166; }
+.warningCard p { margin: 8px 0 0; color: #c5d0e6; }
+.summaryGrid { max-width: 1160px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
 .metric { padding: 16px; border-radius: 22px; min-height: 92px; }
 .metric span { display: block; color: #8f9fbd; font-size: .82rem; margin-bottom: 10px; }
 .metric strong { display: block; font-size: 1.08rem; line-height: 1.25; }
@@ -39,8 +41,10 @@ h2 { margin-bottom: 8px; letter-spacing: -.04em; }
 .positive { color: #00f5a0; }
 .negative { color: #ff6b8a; }
 .forecastBox { padding: 16px; border-radius: 22px; background: linear-gradient(135deg, rgba(88,166,255,.18), rgba(0,245,160,.12)); border: 1px solid rgba(255,255,255,.09); }
-.forecastBox span, .forecastBox small { display: block; color: #aab7d4; }
+.forecastBox span, .forecastBox small, .forecastBox em { display: block; color: #aab7d4; }
+.forecastBox em { margin-top: 8px; font-size: .8rem; font-style: normal; line-height: 1.4; }
 .forecastBox strong { display: block; margin: 6px 0; font-size: 1.7rem; letter-spacing: -.04em; }
+.sourceLine { margin: 14px 0 0; color: #8f9fbd; font-size: .86rem; }
 .metricsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
 .metricsGrid .metric { min-height: 78px; padding: 12px; background: rgba(0,0,0,.16); box-shadow: none; }
 .metricsGrid .metric strong { font-size: .96rem; }
