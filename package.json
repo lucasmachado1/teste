@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev"
+    "postinstall": "node scripts/patch-postcss-exports.js",
+    "dev": "node scripts/patch-postcss-exports.js && NODE_OPTIONS=--openssl-legacy-provider next dev",
+    "build": "node scripts/patch-postcss-exports.js && NODE_OPTIONS=--openssl-legacy-provider next build",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider next start"
   },
   "repository": {
     "type": "git",
