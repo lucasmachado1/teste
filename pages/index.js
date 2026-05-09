@@ -1,236 +1,148 @@
+import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';
 
-const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+const formatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
 
-function formatMoney(value) {
-  if (value === null || value === undefined) return '--';
-  if (typeof value !== 'number' || Number.isNaN(value)) return '--';
-  return currency.format(value);
-}
-
-function StatusPill({ value }) {
-  const tone = value.includes('compra') ? 'buy' : value.includes('venda') ? 'sell' : 'neutral';
-  return <span className={`pill ${tone}`}>{value}</span>;
-}
-
-function Metric({ label, value }) {
+function Metric({ label, value, tone }) {
   return (
-    <div className="metric">
+    <article className={`metric ${tone || ''}`}>
       <span>{label}</span>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-
-function RiskPlan({ plan }) {
-  if (!plan) return null;
-
-  if (plan.direction === 'NEUTRO') {
-    return (
-      <div className="riskPlan neutralPlan">
-        <div>
-          <span>Plano operacional</span>
-          <strong>Aguardar confirmação</strong>
-        </div>
-        <p>{plan.invalidation}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="riskPlan">
-      <div className="riskHeader">
-        <div>
-          <span>Plano operacional</span>
-          <strong>{plan.direction}</strong>
-        </div>
-        <small>Risco {plan.riskPercent}% · {plan.timeFrame}</small>
-      </div>
-
-      <div className="tradeGrid">
-        <Metric label="Entrada" value={formatMoney(plan.entry)} />
-        <Metric label="Stop loss" value={formatMoney(plan.stopLoss)} />
-        <Metric label="R:R" value={plan.rewardToRisk} />
-      </div>
-
-      <div className="targetsGrid">
-        {plan.takeProfits.map((target) => (
-          <div className="target" key={target.label}>
-            <span>{target.label}</span>
-            <strong>{formatMoney(target.price)}</strong>
-            <small>+{target.gainPercent}%</small>
-          </div>
-        ))}
-      </div>
-
-      <p>{plan.invalidation}</p>
-      <em>{plan.notes}</em>
-    </div>
-  );
-}
-
-function AssetCard({ asset }) {
-  const changeClass = asset.change24h >= 0 ? 'positive' : 'negative';
-
-  return (
-    <article className="assetCard">
-      <header className="assetHeader">
-        <div>
-          <span className="ticker">{asset.ticker}</span>
-          <h2>{asset.name}</h2>
-        </div>
-        <StatusPill value={asset.signal.label} />
-      </header>
-
-      <div className="priceRow">
-        <strong>{formatMoney(asset.price)}</strong>
-        <span className={changeClass}>{asset.change24h}% 24h</span>
-      </div>
-
-      <div className="forecastBox">
-        <span>Previsão estatística</span>
-        <strong>{formatMoney(asset.forecast.projectedPrice)}</strong>
-        <small>{asset.forecast.projectedChange}% · {asset.forecast.horizon}</small>
-        <em>{asset.forecast.model}</em>
-      </div>
-
-      <RiskPlan plan={asset.riskPlan} />
-
-      <div className="sourceLine">Fonte real: {asset.source}</div>
-
-      <div className="metricsGrid">
-        <Metric label="SMA20" value={formatMoney(asset.indicators.sma20)} />
-        <Metric label="SMA50" value={formatMoney(asset.indicators.sma50)} />
-        <Metric label="EMA12" value={formatMoney(asset.indicators.ema12)} />
-        <Metric label="EMA26" value={formatMoney(asset.indicators.ema26)} />
-        <Metric label="RSI14" value={asset.indicators.rsi14} />
-        <Metric label="ATR14" value={formatMoney(asset.indicators.atr14)} />
-        <Metric label="Volatilidade" value={`${asset.indicators.volatility20}%`} />
-      </div>
-
-      <div className="reasonList">
-        {asset.signal.reasons.map((reason) => <p key={reason}>• {reason}</p>)}
-      </div>
     </article>
   );
 }
 
-function ConfigCard({ telegramConfigured, onSend, sending }) {
+function WalletCard({ wallet }) {
   return (
-    <section className="configCard">
-      <div>
-        <span className="eyebrow">Telegram</span>
-        <h2>Alertas automáticos</h2>
-        <p>Configure o Telegram para receber previsão a cada 5 minutos, checks automáticos de take profit/stop loss e acompanhamento da banca virtual de R$ 100 por ativo.</p>
+    <article className={`walletCard ${wallet.funded ? 'funded' : 'empty'}`}>
+      <header>
+        <div>
+          <span className="chain">{wallet.chainLabel}</span>
+          <h3>{wallet.owner}</h3>
+        </div>
+        <strong className="status">{wallet.riskTag}</strong>
+      </header>
+
+      <dl className="walletFacts">
+        <div>
+          <dt>Saldo</dt>
+          <dd>{formatter.format(wallet.balance)} {wallet.asset}</dd>
+        </div>
+        <div>
+          <dt>Confirmações recentes</dt>
+          <dd>{wallet.confirmations}</dd>
+        </div>
+        <div>
+          <dt>Última atividade conhecida</dt>
+          <dd>{wallet.lastActivity}</dd>
+        </div>
+        <div>
+          <dt>Origem</dt>
+          <dd>{wallet.source}</dd>
+        </div>
+      </dl>
+
+      <div className="addressBlock">
+        <span>Endereço monitorado</span>
+        <code>{wallet.address}</code>
       </div>
 
-      <div className="envGrid">
-        <code>TELEGRAM_BOT_TOKEN</code>
-        <code>TELEGRAM_CHAT_ID</code>
-        <code>CHECK_INTERVAL_MS=300000</code>
-        <code>BANKROLL_PER_ASSET_BRL=100</code>
-      </div>
-
-      <div className="telegramStatus">
-        <span className={telegramConfigured ? 'dot ok' : 'dot'} />
-        {telegramConfigured ? 'Telegram configurado' : 'Aguardando token e chat id'}
-      </div>
-
-      <button className="primaryButton" onClick={onSend} disabled={!telegramConfigured || sending} type="button">
-        {sending ? 'Enviando...' : 'Enviar análise agora'}
-      </button>
-    </section>
+      <footer>
+        <span className={wallet.validAddress ? 'valid' : 'invalid'}>
+          {wallet.validAddress ? 'Formato validado' : 'Formato requer revisão'}
+        </span>
+        <a href={wallet.explorerUrl} target="_blank" rel="noreferrer">Abrir explorer</a>
+      </footer>
+    </article>
   );
 }
 
 export default function Home() {
-  const [report, setReport] = useState(null);
+  const [data, setData] = useState(null);
+  const [fundedOnly, setFundedOnly] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
 
-  const loadMarket = async () => {
-    setLoading(true);
-    setMessage('');
-    const response = await fetch('/api/market');
-    const data = await response.json();
-
-    if (!response.ok) {
-      setMessage(data.message || 'Erro ao consultar o mercado.');
-      setLoading(false);
-      return;
-    }
-
-    setReport(data);
+  const loadWallets = async (signal) => {
+    setError('');
+    const response = await fetch(`/api/wallets?funded=${fundedOnly}`, { signal });
+    if (!response.ok) throw new Error('Falha ao consultar carteiras monitoradas.');
+    const payload = await response.json();
+    setData(payload);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadMarket();
-    const timer = setInterval(loadMarket, 300000);
-    return () => clearInterval(timer);
-  }, []);
+    const controller = new AbortController();
+    setLoading(true);
+    loadWallets(controller.signal).catch((err) => {
+      if (err.name !== 'AbortError') {
+        setError(err.message);
+        setLoading(false);
+      }
+    });
 
-  const sendTelegram = async () => {
-    setSending(true);
-    setMessage('');
-    const response = await fetch('/api/telegram', { method: 'POST' });
-    const data = await response.json();
-    setMessage(response.ok ? 'Análise enviada ao Telegram.' : data.message);
-    setSending(false);
-  };
+    const timer = setInterval(() => {
+      loadWallets(controller.signal).catch((err) => {
+        if (err.name !== 'AbortError') setError(err.message);
+      });
+    }, data?.refreshIntervalMs || 12000);
 
-  const sortedAssets = useMemo(() => {
-    if (!report) return [];
-    return [...report.assets].sort((a, b) => b.signal.score - a.signal.score);
-  }, [report]);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [fundedOnly]);
+
+  const lastUpdate = useMemo(() => {
+    if (!data?.scannedAt) return '--';
+    return new Date(data.scannedAt).toLocaleString('pt-BR');
+  }, [data]);
 
   return (
-    <main className="appShell">
+    <main className="shell">
+      <Head>
+        <title>Guardian Chain Watch</title>
+        <meta name="description" content="Monitoramento seguro de carteiras BTC, ETH, XRP e ADA autorizadas." />
+      </Head>
+
       <section className="hero">
-        <div className="heroContent">
-          <span className="eyebrow">Fiscal Crypto Pro</span>
-          <h1>Bot profissional para fiscalizar BTC, ETH, XRP e ADA em tempo real.</h1>
-          <p>Coleta preços reais em múltiplos provedores, calcula médias móveis, RSI, volatilidade, take profit, stop loss e cria uma previsão de 5 minutos baseada nos preços anteriores.</p>
-          <div className="heroActions">
-            <button className="primaryButton" onClick={loadMarket} disabled={loading} type="button">{loading ? 'Atualizando...' : 'Atualizar agora'}</button>
-            {report && <span>Última leitura: {new Date(report.updatedAt).toLocaleTimeString('pt-BR')}</span>}
-          </div>
+        <div className="badge">Monitoramento blockchain defensivo</div>
+        <h1>Carteiras BTC, ETH, XRP e ADA sob observação em tempo quase real.</h1>
+        <p>
+          Painel profissional para acompanhar endereços informados e autorizados, priorizando
+          saldos encontrados, auditoria e rastreabilidade sem manipular chaves privadas.
+        </p>
+        <div className="actions">
+          <button type="button" onClick={() => setFundedOnly((value) => !value)}>
+            {fundedOnly ? 'Mostrar todas as carteiras' : 'Filtrar carteiras com moedas'}
+          </button>
+          <span>Atualização automática a cada 12 segundos · Última leitura: {lastUpdate}</span>
         </div>
       </section>
 
-      {message && <div className="notice">{message}</div>}
-
-      {report && report.warnings && report.warnings.length > 0 && (
-        <section className="warningCard">
-          <strong>Status parcial dos provedores</strong>
-          {report.warnings.map((warning) => <p key={warning}>{warning}</p>)}
-        </section>
-      )}
-
-      {report && (
-        <section className="summaryGrid">
-          <Metric label="Status" value={report.status} />
-          <Metric label="Fonte" value={report.source} />
-          <Metric label="Viés do mercado" value={report.summary.bias} />
-          <Metric label="Score médio" value={report.summary.averageScore} />
-          <Metric label="Mais forte" value={report.summary.strongest} />
-          <Metric label="Mais fraco" value={report.summary.weakest} />
-        </section>
-      )}
-
-      {report && <ConfigCard telegramConfigured={report.telegramConfigured} onSend={sendTelegram} sending={sending} />}
-
-      <section className="assetGrid">
-        {loading && !report && <div className="loadingCard">Consultando mercado real...</div>}
-        {!loading && report && sortedAssets.length === 0 && <div className="loadingCard">Nenhum provedor retornou dados reais agora. Tente novamente em instantes ou verifique a conectividade do servidor.</div>}
-        {sortedAssets.map((asset) => <AssetCard asset={asset} key={asset.symbol} />)}
+      <section className="securityNotice">
+        <strong>Postura de segurança:</strong> este produto não varre carteiras aleatórias, não tenta quebrar criptografia,
+        não lista private keys e não auxilia acesso a fundos de terceiros. O fluxo correto é importar apenas endereços
+        cuja monitoração foi autorizada pelo proprietário ou por obrigação de auditoria.
       </section>
 
-      <section className="disclaimer">
-        <strong>Aviso:</strong> take profit, stop loss, banca virtual de R$ 100 por ativo e previsão de 5 minutos são estatísticos e não representam recomendação financeira. Use gerenciamento de risco.
+      {error && <section className="errorBox">{error}</section>}
+
+      <section className="metricsGrid" aria-label="Resumo da varredura">
+        <Metric label="Carteiras varridas" value={data?.totals.scanned ?? '--'} />
+        <Metric label="Com moedas" value={data?.totals.funded ?? '--'} tone="positive" />
+        <Metric label="Sem saldo" value={data?.totals.empty ?? '--'} />
+        <Metric label="Redes suportadas" value={data?.totals.networks ?? '--'} />
       </section>
+
+      {loading ? (
+        <section className="loading">Sincronizando leituras de blockchain...</section>
+      ) : (
+        <section className="walletGrid">
+          {data.wallets.map((wallet) => <WalletCard wallet={wallet} key={wallet.id} />)}
+        </section>
+      )}
     </main>
   );
 }
