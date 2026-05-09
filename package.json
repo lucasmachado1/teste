@@ -1,29 +1,20 @@
 {
-  "name": "teste",
+  "name": "guardian-chain-watch",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Painel seguro para monitoramento em tempo quase real de endereços cripto autorizados.",
   "scripts": {
-    "postinstall": "node scripts/patch-postcss-exports.js",
     "dev": "node scripts/patch-postcss-exports.js && NODE_OPTIONS=--openssl-legacy-provider next dev",
     "build": "node scripts/patch-postcss-exports.js && NODE_OPTIONS=--openssl-legacy-provider next build",
-    "start": "NODE_OPTIONS=--openssl-legacy-provider next start",
-    "bot": "node scripts/crypto-telegram-bot.js"
+    "start": "NODE_OPTIONS=--openssl-legacy-provider next start"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lucasmachado1/teste.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/lucasmachado1/teste/issues"
-  },
-  "homepage": "https://github.com/lucasmachado1/teste#readme",
   "dependencies": {
     "next": "^10.1.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18"
   }
 }
