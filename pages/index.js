@@ -1,251 +1,295 @@
 import Head from 'next/head';
 import { useEffect, useMemo, useState } from 'react';
 
-const formatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 8 });
+const SYMBOLS = [
+  { id: 'tiger', icon: '🐯', label: 'Tigre dourado' },
+  { id: 'gold', icon: '🪙', label: 'Moeda imperial' },
+  { id: 'ingot', icon: '🏆', label: 'Tesouro' },
+  { id: 'fire', icon: '🔥', label: 'Bônus quente' },
+  { id: 'gem', icon: '💎', label: 'Joia rara' },
+  { id: 'leaf', icon: '🍀', label: 'Sorte' },
+];
 
-function Metric({ label, value, tone }) {
+const DEFAULT_CONFIG = {
+  winChance: 32,
+  jackpotChance: 4,
+  bet: 10,
+  tripleMultiplier: 8,
+  pairMultiplier: 2,
+  jackpotMultiplier: 25,
+};
+
+const clamp = (value, min, max) => Math.min(Math.max(Number(value) || 0, min), max);
+
+function randomIndex(max) {
+  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return array[0] % max;
+  }
+
+  return Math.floor(Math.random() * max);
+}
+
+function pickSymbol(excludedIds = []) {
+  const availableSymbols = SYMBOLS.filter((symbol) => !excludedIds.includes(symbol.id));
+  return availableSymbols[randomIndex(availableSymbols.length)];
+}
+
+function shuffleReels(reels) {
+  return reels
+    .map((symbol) => ({ symbol, order: randomIndex(1000) }))
+    .sort((first, second) => first.order - second.order)
+    .map(({ symbol }) => symbol);
+}
+
+function calculateSpin(config) {
+  const safeConfig = {
+    ...config,
+    winChance: clamp(config.winChance, 0, 95),
+    jackpotChance: clamp(config.jackpotChance, 0, 25),
+    bet: clamp(config.bet, 1, 1000),
+    tripleMultiplier: clamp(config.tripleMultiplier, 1, 100),
+    pairMultiplier: clamp(config.pairMultiplier, 1, 25),
+    jackpotMultiplier: clamp(config.jackpotMultiplier, 1, 250),
+  };
+  const roll = randomIndex(10000) / 100;
+  const jackpotLimit = Math.min(safeConfig.jackpotChance, safeConfig.winChance);
+
+  if (roll < jackpotLimit) {
+    const reels = [SYMBOLS[0], SYMBOLS[0], SYMBOLS[0]];
+    return {
+      reels,
+      outcome: 'jackpot',
+      prize: safeConfig.bet * safeConfig.jackpotMultiplier,
+      message: 'Jackpot do Tigre! Trinca máxima ativada.',
+    };
+  }
+
+  if (roll < safeConfig.winChance) {
+    const mainSymbol = pickSymbol(['tiger']);
+    const thirdSymbol = randomIndex(100) < 45 ? mainSymbol : pickSymbol([mainSymbol.id]);
+    const reels = shuffleReels([mainSymbol, mainSymbol, thirdSymbol]);
+    const isTriple = reels.every((symbol) => symbol.id === mainSymbol.id);
+
+    return {
+      reels,
+      outcome: isTriple ? 'triple' : 'pair',
+      prize: safeConfig.bet * (isTriple ? safeConfig.tripleMultiplier : safeConfig.pairMultiplier),
+      message: isTriple ? 'Trinca premiada!' : 'Dupla premiada!',
+    };
+  }
+
+  const first = pickSymbol();
+  const second = pickSymbol([first.id]);
+  const third = pickSymbol([first.id, second.id]);
+
+  return {
+    reels: shuffleReels([first, second, third]),
+    outcome: 'miss',
+    prize: 0,
+    message: 'Quase! Ajuste o painel ou tente outra rodada demo.',
+  };
+}
+
+function StatCard({ label, value, tone }) {
   return (
-    <article className={`metric ${tone || ''}`}>
+    <article className={`statCard ${tone || ''}`}>
       <span>{label}</span>
       <strong>{value}</strong>
     </article>
   );
 }
 
-
-function bytesToHex(bytes) {
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function bytesToBase64(bytes) {
-  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
-  return window.btoa(binary);
-}
-
-function bytesToBase64Url(bytes) {
-  return bytesToBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function bytesToPassword(bytes, length) {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*_-+=?';
-  return Array.from(bytes.slice(0, length), (byte) => alphabet[byte % alphabet.length]).join('');
-}
-
-function generateSecret({ format, length }) {
-  if (typeof window === 'undefined' || !window.crypto?.getRandomValues) {
-    return 'Web Crypto indisponível neste navegador';
-  }
-
-  const safeLength = Math.min(Math.max(Number(length) || 32, 16), 128);
-  const bytes = new Uint8Array(format === 'password' ? safeLength : Math.ceil((safeLength * 3) / 4));
-  window.crypto.getRandomValues(bytes);
-
-  if (format === 'hex') return bytesToHex(bytes).slice(0, safeLength * 2);
-  if (format === 'base64') return bytesToBase64(bytes).slice(0, safeLength);
-  if (format === 'password') return bytesToPassword(bytes, safeLength);
-  return bytesToBase64Url(bytes).slice(0, safeLength);
-}
-
-function SecretKeyGenerator() {
-  const [format, setFormat] = useState('base64url');
-  const [length, setLength] = useState(32);
-  const [secret, setSecret] = useState('');
-  const [copied, setCopied] = useState(false);
-
-  const handleGenerate = () => {
-    setSecret(generateSecret({ format, length }));
-    setCopied(false);
-  };
-
-  const handleCopy = async () => {
-    if (!secret || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(secret);
-    setCopied(true);
-  };
-
-  useEffect(() => {
-    handleGenerate();
-  }, []);
-
+function ControlField({ label, suffix, value, min, max, onChange }) {
   return (
-    <section className="secretGenerator" aria-label="Mini gerador de secret keys">
+    <label className="controlField">
+      <span>{label}</span>
       <div>
-        <span className="badge">Mini gerador seguro</span>
-        <h2>Secret keys para API, tokens e senhas operacionais.</h2>
-        <p>
-          Gera segredos locais com Web Crypto, sem enviar para servidor e sem armazenar histórico.
-          Este módulo não cria private keys de carteira, não deriva endereços e não consulta saldos.
-        </p>
+        <input
+          min={min}
+          max={max}
+          type="number"
+          value={value}
+          onChange={(event) => onChange(clamp(event.target.value, min, max))}
+        />
+        {suffix && <small>{suffix}</small>}
       </div>
-
-      <div className="generatorControls">
-        <label>
-          Formato
-          <select value={format} onChange={(event) => setFormat(event.target.value)}>
-            <option value="base64url">Base64 URL-safe</option>
-            <option value="base64">Base64</option>
-            <option value="hex">Hex</option>
-            <option value="password">Senha forte</option>
-          </select>
-        </label>
-        <label>
-          Tamanho
-          <input min="16" max="128" type="number" value={length} onChange={(event) => setLength(event.target.value)} />
-        </label>
-        <button type="button" onClick={handleGenerate}>Gerar secret key</button>
-      </div>
-
-      <div className="secretOutput">
-        <span>Resultado local</span>
-        <code>{secret}</code>
-        <button type="button" onClick={handleCopy} disabled={!secret}>
-          {copied ? 'Copiado' : 'Copiar'}
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function WalletCard({ wallet }) {
-  return (
-    <article className={`walletCard ${wallet.funded ? 'funded' : 'empty'}`}>
-      <header>
-        <div>
-          <span className="chain">{wallet.chainLabel}</span>
-          <h3>{wallet.owner}</h3>
-        </div>
-        <strong className="status">{wallet.riskTag}</strong>
-      </header>
-
-      <dl className="walletFacts">
-        <div>
-          <dt>Saldo</dt>
-          <dd>{wallet.displayBalance || formatter.format(wallet.balance)} {wallet.asset}</dd>
-        </div>
-        <div>
-          <dt>Confirmações recentes</dt>
-          <dd>{wallet.confirmations}</dd>
-        </div>
-        <div>
-          <dt>Última atividade conhecida</dt>
-          <dd>{wallet.lastActivity}</dd>
-        </div>
-        <div>
-          <dt>Origem</dt>
-          <dd>{wallet.source}</dd>
-        </div>
-        <div>
-          <dt>Provedor real</dt>
-          <dd>{wallet.providerStatus === 'online' ? wallet.provider : wallet.providerStatus}</dd>
-        </div>
-      </dl>
-
-      <div className="addressBlock">
-        <span>Endereço monitorado</span>
-        <code>{wallet.address}</code>
-      </div>
-
-      {wallet.error && <p className="providerError">{wallet.error}</p>}
-
-      <footer>
-        <span className={wallet.validAddress && wallet.providerStatus === 'online' ? 'valid' : 'invalid'}>
-          {wallet.validAddress ? `Provedor: ${wallet.providerStatus}` : 'Formato requer revisão'}
-        </span>
-        <a href={wallet.explorerUrl} target="_blank" rel="noreferrer">Abrir explorer</a>
-      </footer>
-    </article>
+    </label>
   );
 }
 
 export default function Home() {
-  const [data, setData] = useState(null);
-  const [fundedOnly, setFundedOnly] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const loadWallets = async (signal) => {
-    setError('');
-    const response = await fetch(`/api/wallets?funded=${fundedOnly}`, { signal });
-    if (!response.ok) throw new Error('Falha ao consultar carteiras monitoradas.');
-    const payload = await response.json();
-    setData(payload);
-    setLoading(false);
-  };
+  const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [credits, setCredits] = useState(500);
+  const [reels, setReels] = useState([SYMBOLS[0], SYMBOLS[1], SYMBOLS[2]]);
+  const [message, setMessage] = useState('Configure as chances no painel e rode a experiência demo.');
+  const [history, setHistory] = useState([]);
+  const [spinning, setSpinning] = useState(false);
 
   useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    loadWallets(controller.signal).catch((err) => {
-      if (err.name !== 'AbortError') {
-        setError(err.message);
-        setLoading(false);
-      }
-    });
+    const savedConfig = window.localStorage.getItem('tigerDemoConfig');
+    if (savedConfig) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(savedConfig) });
+  }, []);
 
-    const timer = setInterval(() => {
-      loadWallets(controller.signal).catch((err) => {
-        if (err.name !== 'AbortError') setError(err.message);
-      });
-    }, data?.refreshIntervalMs || 12000);
+  useEffect(() => {
+    window.localStorage.setItem('tigerDemoConfig', JSON.stringify(config));
+  }, [config]);
 
-    return () => {
-      controller.abort();
-      clearInterval(timer);
-    };
-  }, [fundedOnly]);
+  const stats = useMemo(() => {
+    const totalSpins = history.length;
+    const wins = history.filter((item) => item.prize > 0).length;
+    const paid = history.reduce((sum, item) => sum + item.prize, 0);
+    const wagered = history.reduce((sum, item) => sum + item.bet, 0);
+    const rtp = wagered ? Math.round((paid / wagered) * 100) : 0;
 
-  const lastUpdate = useMemo(() => {
-    if (!data?.scannedAt) return '--';
-    return new Date(data.scannedAt).toLocaleString('pt-BR');
-  }, [data]);
+    return { totalSpins, wins, paid, wagered, rtp };
+  }, [history]);
+
+  const updateConfig = (field, value) => {
+    setConfig((currentConfig) => ({ ...currentConfig, [field]: value }));
+  };
+
+  const spin = () => {
+    if (spinning || credits < config.bet) {
+      setMessage('Créditos fictícios insuficientes para esta aposta demo.');
+      return;
+    }
+
+    setSpinning(true);
+    setMessage('Roletas girando...');
+    setCredits((currentCredits) => currentCredits - config.bet);
+
+    const animation = setInterval(() => {
+      setReels([pickSymbol(), pickSymbol(), pickSymbol()]);
+    }, 90);
+
+    setTimeout(() => {
+      clearInterval(animation);
+      const result = calculateSpin(config);
+      setReels(result.reels);
+      setCredits((currentCredits) => currentCredits + result.prize);
+      setHistory((currentHistory) => [
+        {
+          ...result,
+          bet: config.bet,
+          createdAt: new Date().toLocaleTimeString('pt-BR'),
+        },
+        ...currentHistory,
+      ].slice(0, 8));
+      setMessage(result.message);
+      setSpinning(false);
+    }, 850);
+  };
+
+  const resetDemo = () => {
+    setCredits(500);
+    setHistory([]);
+    setReels([SYMBOLS[0], SYMBOLS[1], SYMBOLS[2]]);
+    setMessage('Demonstração reiniciada. Nenhum valor real é movimentado.');
+  };
 
   return (
     <main className="shell">
       <Head>
-        <title>Guardian Chain Watch</title>
-        <meta name="description" content="Monitoramento seguro de carteiras BTC, ETH, XRP e ADA autorizadas." />
+        <title>Selva da Sorte Demo</title>
+        <meta
+          name="description"
+          content="Jogo demo estilo roleta com painel de controle de probabilidades para sites de entretenimento sem dinheiro real."
+        />
       </Head>
 
-      <section className="hero">
-        <div className="badge">Monitoramento blockchain defensivo</div>
-        <h1>Carteiras BTC, ETH, XRP e ADA sob observação em tempo quase real.</h1>
-        <p>
-          Painel profissional para acompanhar endereços informados e autorizados, priorizando
-          saldos encontrados, auditoria e rastreabilidade sem manipular chaves privadas.
-        </p>
-        <div className="actions">
-          <button type="button" onClick={() => setFundedOnly((value) => !value)}>
-            {fundedOnly ? 'Mostrar todas as carteiras' : 'Filtrar carteiras com moedas'}
-          </button>
-          <span>Atualização automática a cada 30 segundos · Última leitura: {lastUpdate}</span>
+      <section className="hero gameHero">
+        <div>
+          <span className="badge">Slot demo configurável</span>
+          <h1>Selva da Sorte: experiência estilo tigrinho para incorporar ao seu site.</h1>
+          <p>
+            Uma versão autoral, responsiva e visualmente pronta para demonstrações. O painel permite ajustar
+            chances, multiplicadores e aposta fictícia, mantendo tudo transparente e sem dinheiro real.
+          </p>
         </div>
+        <aside className="disclaimerBox">
+          <strong>Uso responsável</strong>
+          <span>Protótipo de entretenimento. Não processa pagamentos, saques, depósitos ou apostas reais.</span>
+        </aside>
       </section>
 
-      <section className="securityNotice">
-        <strong>Postura de segurança:</strong> este produto não varre carteiras aleatórias, não tenta quebrar criptografia,
-        não lista private keys e não auxilia acesso a fundos de terceiros. A varredura agora consulta saldos reais somente por endereço autorizado. O fluxo correto é importar apenas endereços
-        cuja monitoração foi autorizada pelo proprietário ou por obrigação de auditoria.
+      <section className="dashboardGrid">
+        <article className="gameMachine" aria-label="Máquina Selva da Sorte">
+          <div className="machineTop">
+            <span>Fortune Jungle</span>
+            <strong>{credits} créditos</strong>
+          </div>
+
+          <div className={`reels ${spinning ? 'spinning' : ''}`}>
+            {reels.map((symbol, index) => (
+              <div className="reel" key={`${symbol.id}-${index}`} aria-label={symbol.label}>
+                <span>{symbol.icon}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="resultPanel">
+            <strong>{message}</strong>
+            <span>Aposta demo: {config.bet} · Chance configurada: {config.winChance}%</span>
+          </div>
+
+          <div className="machineActions">
+            <button type="button" onClick={spin} disabled={spinning}>
+              {spinning ? 'Girando...' : 'Girar demo'}
+            </button>
+            <button className="secondaryButton" type="button" onClick={resetDemo}>
+              Reiniciar créditos
+            </button>
+          </div>
+        </article>
+
+        <aside className="controlPanel" aria-label="Painel de controle do jogo">
+          <span className="badge">Painel de controle</span>
+          <h2>Configure probabilidades e prêmios</h2>
+          <p>
+            Estes controles alteram o comportamento local do protótipo para testes A/B, demonstrações comerciais
+            e calibração de UX. Para uso público, valide regras, idade mínima e legislação aplicável.
+          </p>
+
+          <div className="controlsGrid">
+            <ControlField label="Chance de ganhar" suffix="%" value={config.winChance} min={0} max={95} onChange={(value) => updateConfig('winChance', value)} />
+            <ControlField label="Chance de jackpot" suffix="%" value={config.jackpotChance} min={0} max={25} onChange={(value) => updateConfig('jackpotChance', value)} />
+            <ControlField label="Aposta fictícia" suffix="cr" value={config.bet} min={1} max={1000} onChange={(value) => updateConfig('bet', value)} />
+            <ControlField label="Multiplicador dupla" suffix="x" value={config.pairMultiplier} min={1} max={25} onChange={(value) => updateConfig('pairMultiplier', value)} />
+            <ControlField label="Multiplicador trinca" suffix="x" value={config.tripleMultiplier} min={1} max={100} onChange={(value) => updateConfig('tripleMultiplier', value)} />
+            <ControlField label="Multiplicador jackpot" suffix="x" value={config.jackpotMultiplier} min={1} max={250} onChange={(value) => updateConfig('jackpotMultiplier', value)} />
+          </div>
+        </aside>
       </section>
 
-      {error && <section className="errorBox">{error}</section>}
-
-      <SecretKeyGenerator />
-
-      <section className="metricsGrid" aria-label="Resumo da varredura">
-        <Metric label="Carteiras varridas" value={data?.totals.scanned ?? '--'} />
-        <Metric label="Com moedas" value={data?.totals.funded ?? '--'} tone="positive" />
-        <Metric label="Sem saldo" value={data?.totals.empty ?? '--'} />
-        <Metric label="Redes suportadas" value={data?.totals.networks ?? '--'} />
-        <Metric label="Alertas de provedor" value={data?.totals.providerErrors ?? '--'} />
+      <section className="statsGrid" aria-label="Estatísticas da demonstração">
+        <StatCard label="Rodadas" value={stats.totalSpins} />
+        <StatCard label="Vitórias" value={stats.wins} tone="positive" />
+        <StatCard label="Créditos apostados" value={stats.wagered} />
+        <StatCard label="Créditos pagos" value={stats.paid} tone="gold" />
+        <StatCard label="RTP observado" value={`${stats.rtp}%`} />
       </section>
 
-      {loading ? (
-        <section className="loading">Sincronizando leituras de blockchain...</section>
-      ) : (
-        <section className="walletGrid">
-          {data.wallets.map((wallet) => <WalletCard wallet={wallet} key={wallet.id} />)}
-        </section>
-      )}
+      <section className="historyPanel">
+        <div>
+          <span className="badge">Histórico recente</span>
+          <h2>Últimas rodadas simuladas</h2>
+        </div>
+        {history.length === 0 ? (
+          <p>Nenhuma rodada ainda. Clique em “Girar demo” para iniciar.</p>
+        ) : (
+          <div className="historyList">
+            {history.map((item, index) => (
+              <article className="historyItem" key={`${item.createdAt}-${index}`}>
+                <span>{item.createdAt}</span>
+                <strong>{item.reels.map((symbol) => symbol.icon).join(' ')}</strong>
+                <small>{item.outcome} · aposta {item.bet} · prêmio {item.prize}</small>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
